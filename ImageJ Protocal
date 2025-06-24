@@ -1,0 +1,22 @@
+To get aggregate size, count and total fluorescence per aggregate 
+	1. Straight line tool to measure distance provided by confocal -> analyze -> measure (to get pixels)
+	2. Analyze -> set scale (enter pixels and known length)
+	3. Image -> type -> 8-bit
+	4. Image -> adjust -> threshold
+		a. Check dark background
+		b. Default / red
+		c. Set threshold lower to 30 and upper to 60
+	5. Analyze -> set measurements 
+		a. Check : area, mean gray value, min and max gray value, and integrated density
+	6. Analyze -> analyze particles 
+		a. Size =  4-infinity
+		b. Circularity =  0.30-1.00
+		c. Show = bare outlines
+		d. Check
+			i. Display results
+			ii. Add to manager
+
+To get worm size
+	1. Set scale
+	2. Using freehand tool outline the worm
+	3. Analyze -> measure -> area
