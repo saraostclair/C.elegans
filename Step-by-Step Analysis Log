@@ -1,0 +1,33 @@
+Step-by-Step Summary of My C. elegans Data Analysis
+
+1. Cleared the R Environment
+I started by clearing my R workspace using the command rm(list = ls()) to remove all existing objects
+and ensure a fresh environment.
+
+2. Identified Issues with Column Headers
+I discovered some CSV files had misspelled column headers like "aagr_area", "X", "Area", and
+"worm_ID", which caused extra columns and misaligned data.
+
+3. Checked Which Files Had Incorrect Columns
+I wrote a script to scan all CSV files to identify those with problematic column names so I could
+locate and fix them.
+
+4. Organized Data Files into Folders
+I sorted my data into three folders:
+- data_original (raw files with errors)
+- data_fixed (corrected CSVs with proper headers)
+- dataset_final (intended folder to save the combined dataset)
+
+5. Combined Corrected CSV Files
+I combined all CSVs from the data_fixed folder into one large dataset by reading and stacking their
+rows.
+
+6. Saved the Combined Dataset
+I saved the combined dataset as dataset_final.csv inside the dataset_final folder.
+
+7. Renamed the Dataset Object
+Since the saved file name was not what I initially wanted, I manually renamed the dataset in R to
+celegan_data to keep consistent naming for analysis.
+
+8. Handled File Path Issues
+To avoid working directory errors, I used full folder paths in my code for reading and writing files
