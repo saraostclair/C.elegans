@@ -1,0 +1,116 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r}
+#to clear objects from R environment
+rm(list = ls())
+```
+
+
+```{r}
+#to find my working directory 
+getwd()
+```
+
+
+```{r}
+# Load library
+library(dplyr)
+
+# Set your working directory to the folder with the CSVs
+setwd("C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data/data_original")
+
+# Get list of all CSV files
+csv_files <- list.files(pattern = "\\.csv$", full.names = TRUE)
+
+# Read and combine all CSV files into one big dataframe
+combined_data <- lapply(csv_files, read.csv) %>%
+  bind_rows()
+
+write.csv(combined_data, "data_original.csv", row.names = FALSE)
+
+
+```
+
+### Problem
+I discovered that some of my .csv files contain misspelled column headers, which caused extra columns to appear and misaligned my data across columns. I now need to locate these files and correct the errors. The misspelled headers include "aagr_area", "X", "Area", and "worm_ID".
+
+
+```{r}
+# Set working directory
+setwd("C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data/data_original")
+
+# List CSVs
+csv_files <- list.files(pattern = "\\.csv$", full.names = TRUE)
+target_cols <- c("aagr_area", "X", "Area", "worm_ID")
+
+# Initialize result lists
+column_check <- list()
+skipped_files <- c()
+
+for (file in csv_files) {
+  tryCatch({
+    # Read only first few lines
+    df <- read.csv(file, nrows = 5)
+    matched_cols <- intersect(names(df), target_cols)
+    
+    if (length(matched_cols) > 0) {
+      column_check[[file]] <- paste(matched_cols, collapse = ", ")
+    }
+  }, error = function(e) {
+    # Record skipped files
+    skipped_files <<- c(skipped_files, basename(file))
+  })
+}
+
+# Print files that matched
+if (length(column_check) > 0) {
+  cat("✅ Files containing matching columns:\n")
+  for (f in names(column_check)) {
+    cat(basename(f), "→", column_check[[f]], "\n")
+  }
+} else {
+  cat("❌ No files matched the column names.\n")
+}
+
+# Print skipped files
+if (length(skipped_files) > 0) {
+  cat("\n⚠️ Skipped unreadable/empty files:\n")
+  print(skipped_files)
+}
+
+```
+
+Files containing matching columns:
+C3_N3_D1.csv → aagr_area 
+combined_data.csv → aagr_area, X, Area, worm_ID 
+M2_N1_D1.csv → X, Area 
+M3_N2_D3.csv → worm_ID 
+
+### Solution
+Now I will go back into those .csv files, fix the column names, and re upload them to the data folder.
+
+```{r}
+# creating the dataset I will use for my analysis
+
+library(dplyr)
+
+# Define paths relative to your current working directory or absolute paths
+data_fixed_path <- "C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data/data_fixed"
+dataset_final_path <- "C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data/dataset_final"
+
+# Get list of all CSV files in data_fixed
+csv_files <- list.files(path = data_fixed_path, pattern = "\\.csv$", full.names = TRUE)
+
+# Read and combine all CSV files
+celegan_data <- lapply(csv_files, read.csv) %>%
+  bind_rows()
+
+# Write combined data to dataset_final folder
+write.csv(celegans_data, file = file.path(dataset_final_path, "dataset_final.csv"), row.names = FALSE)
+
+#did not save with the name I wanted so I manually renamed the data set 
+```
+
