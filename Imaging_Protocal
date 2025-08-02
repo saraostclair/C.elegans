@@ -1,0 +1,47 @@
+Confocal Imaging Protocol – YFP Channel (Alexa Fluor 488)
+Microscope: Nikon Eclipse Ti
+Software: NIS-Elements
+Objective: 40x Oil Immersion
+
+1. Startup & Login
+	• Turn on the microscope, laser system, and computer.
+	• Open NIS-Elements software.
+	• Log in using Student profile.
+
+2. Initial Microscope Setup
+	• Apply immersion oil to the 40x objective.
+	• Place slide on the stage.
+	• Locate the worm using the eyepiece (EPI light):
+		○ No filter cube selected
+		○ Use white light only (transmitted illumination off).
+	• Center the worm in the field of view manually.
+
+3. Software Setup: Channel Configuration
+	• Under the Nikon 2 configuration, select the YFP channel (Alexa Fluor 488).
+	• Ensure only the 488 nm laser is activated.
+		○ Laser Power: 1.0%
+		○ Gain: 76
+		○ Offset: -127
+
+4. Z-Stack Parameters
+	• Click Z-stack acquisition.
+	• Set the Z-range:
+		○ Total depth: ~25 µm
+		○ Step size: 1 µm
+	• Ensure that the center of the worm is aligned with the midpoint of the Z-stack.
+
+5. Image Stitching Setup (if needed)
+	• If using Large Image Scan:
+		○ Set Image Size: 1 x 1 field from microscope set point (or to correct size for the position of the worm)
+		○ Set Overlap: 20% (for proper blending)
+
+6. Final Checks
+	• Confirm all laser settings and stage position.
+	• Make sure immersion oil forms a proper interface between lens and slide.
+	• Ensure the coverslip is not cracked and sample is stable.
+
+7. Acquire Image
+	• Press Run Acquisition or Capture to begin imaging.
+	
+	
+	
