@@ -1,0 +1,89 @@
+---
+title: "Graphs"
+format: html
+---
+
+```{r}
+#loading in data
+rm(list = ls())
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+celegans_data_final <- read_csv("dataset_final/celegans_data_final.csv")
+ print(celegans_data_final)
+```
+
+```{r}
+# Summarize data: calculate mean and standard error by treatment and age
+summary_data <- celegans_data_final %>%
+  group_by(treatment, age) %>%
+  summarise(
+    mean_norm_aggr_num = mean(norm_aggr_num, na.rm = TRUE),
+    se_norm_aggr_num = sd(norm_aggr_num, na.rm = TRUE) / sqrt(n()),
+    
+    mean_norm_aggr_area = mean(norm_aggr_area, na.rm = TRUE),
+    se_norm_aggr_area = sd(norm_aggr_area, na.rm = TRUE) / sqrt(n()),
+    
+    mean_norm_IntDen = mean(norm_IntDen, na.rm = TRUE),
+    se_norm_IntDen = sd(norm_IntDen, na.rm = TRUE) / sqrt(n())
+  ) 
+
+```
+
+
+```{r}
+
+# Ensure 'age' is a factor in the desired order
+summary_data$age <- factor(summary_data$age, levels = c("L4+1", "L4+7", "L4+14"))
+
+# Plot 1: Normalized Aggregate Number
+ggplot(summary_data, aes(x = age, y = mean_norm_aggr_num, fill = treatment)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(
+      ymin = mean_norm_aggr_num - se_norm_aggr_num,
+      ymax = mean_norm_aggr_num + se_norm_aggr_num
+    ),
+    position = position_dodge(width = 0.9),
+    width = 0.2
+  ) +
+  labs(
+    title = "Normalized Aggregate Number by Treatment and Age",
+    x = "Age",
+    y = "Mean Normalized Aggregate Number"
+  ) +
+  scale_fill_manual(values = c("control" = "#619CFF", "mannitol" = "#F8766D")) +
+  theme_minimal()
+
+```
+
+
+```{r}
+# Plot 2: Normalized Aggregate Area
+ggplot(summary_data, aes(x = age, y = mean_norm_aggr_area, fill = treatment)) +
+  geom_col(position = position_dodge(0.8), width = 0.7) +
+  geom_errorbar(aes(ymin = mean_norm_aggr_area - se_norm_aggr_area,
+                    ymax = mean_norm_aggr_area + se_norm_aggr_area),
+                width = 0.2, position = position_dodge(0.8)) +
+  labs(title = "Normalized Aggregate Area by Treatment and Age",
+       x = "Age",
+       y = "Normalized Aggregate Area") +
+  theme_minimal() +
+  scale_fill_manual(values = c("control" = "#619CFF", "mannitol" = "#F8766D"))
+```
+
+```{r}
+# Plot 3: Normalized Fluorescence Intensity
+ggplot(summary_data, aes(x = age, y = mean_norm_IntDen, fill = treatment)) +
+  geom_col(position = position_dodge(0.8), width = 0.7) +
+  geom_errorbar(aes(ymin = mean_norm_IntDen - se_norm_IntDen,
+                    ymax = mean_norm_IntDen + se_norm_IntDen),
+                width = 0.2, position = position_dodge(0.8)) +
+  labs(title = "Normalized Fluorescence Intensity by Treatment and Age",
+       x = "Age",
+       y = "Normalized Fluorescence Intensity") +
+  theme_minimal() +
+  scale_fill_manual(values = c("control" = "#619CFF", "mannitol" = "#F8766D"))
+```
+

@@ -93,24 +93,55 @@ M3_N2_D3.csv → worm_ID
 Now I will go back into those .csv files, fix the column names, and re upload them to the data folder.
 
 ```{r}
-# creating the dataset I will use for my analysis
+# Set working directory to the parent data folder (not data_original)
+setwd("C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data")
 
+# Load dplyr for data manipulation
 library(dplyr)
 
-# Define paths relative to your current working directory or absolute paths
-data_fixed_path <- "C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data/data_fixed"
-dataset_final_path <- "C:/Users/sarao/OneDrive - St. Lawrence University/Summer Research/summer research/C.elegans/data/dataset_final"
+# Define paths relative to the working directory
+data_fixed_path <- "data_fixed"
+dataset_final_path <- "dataset_final"
+
+# Create dataset_final folder if it doesn't exist
+if (!dir.exists(dataset_final_path)) {
+  dir.create(dataset_final_path)
+}
 
 # Get list of all CSV files in data_fixed
 csv_files <- list.files(path = data_fixed_path, pattern = "\\.csv$", full.names = TRUE)
 
 # Read and combine all CSV files
-celegan_data <- lapply(csv_files, read.csv) %>%
+celegans_data <- lapply(csv_files, read.csv) %>%
   bind_rows()
 
-# Write combined data to dataset_final folder
-write.csv(celegans_data, file = file.path(dataset_final_path, "dataset_final.csv"), row.names = FALSE)
+# Save the combined dataset to dataset_final folder
+write.csv(celegans_data, file = file.path(dataset_final_path, "celegans_data.csv"), row.names = FALSE)
 
-#did not save with the name I wanted so I manually renamed the data set 
 ```
+
+
+```{r}
+# Create new dataset with updated columns
+celegans_data_final <- celegans_data
+
+# Convert age and treatment to factors with specified order
+celegans_data_final$age <- factor(celegans_data_final$age, levels = c("L4+1", "L4+7", "L4+14"))
+celegans_data_final$treatment <- factor(celegans_data_final$treatment, levels = c("control", "mannitol"))
+
+# Add normalized columns based on worm area
+celegans_data_final$norm_aggr_num <- celegans_data_final$aggr_num / celegans_data_final$worm_area
+celegans_data_final$norm_aggr_area <- celegans_data_final$aggr_area / celegans_data_final$worm_area
+celegans_data_final$norm_IntDen <- celegans_data_final$IntDen / celegans_data_final$worm_area
+
+# Create 'dataset_final' folder if it doesn't exist
+if (!dir.exists("dataset_final")) {
+  dir.create("dataset_final")
+}
+
+# Save final dataset to CSV file
+write.csv(celegans_data_final, file = "dataset_final/celegans_data_final.csv", row.names = FALSE)
+
+```
+
 

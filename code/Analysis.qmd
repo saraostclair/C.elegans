@@ -1,0 +1,90 @@
+---
+title: "Analysis"
+format: html
+---
+
+```{r}
+#loading in data
+rm(list = ls())
+library(readr)
+# Load necessary libraries
+library(tidyverse)  # for data handling
+library(emmeans)    # for post-hoc tests (optional)
+celegans_data_final <- read_csv("dataset_final/celegans_data_final.csv")
+
+# Convert 'age' and 'treatment' to factors with correct levels
+celegans_data_final <- celegans_data_final %>%
+  mutate(
+    age = factor(age, levels = c("L4+1", "L4+7", "L4+14")),
+    treatment = factor(treatment, levels = c("control", "mannitol"))
+  )
+# Ensure 'age' is a factor in the desired order
+celegans_data_final$age <- factor(celegans_data_final$age, levels = c("L4+1", "L4+7", "L4+14"))
+```
+
+```{r}
+# Run the two-way ANOVAs
+
+# Aggregate number
+anova_num <- aov(norm_aggr_num ~ age * treatment, data = celegans_data_final)
+summary(anova_num)
+
+# Aggregate area
+anova_area <- aov(norm_aggr_area ~ age * treatment, data = celegans_data_final)
+summary(anova_area)
+
+# Fluorescence intensity
+anova_intden <- aov(norm_IntDen ~ age * treatment, data = celegans_data_final)
+summary(anova_intden)
+
+```
+
+```{r}
+# post hoc comparison 
+# Aggregate Number
+emm_num <- emmeans(anova_num, pairwise ~ age | treatment)
+print(emm_num$contrasts)
+
+emm_num_treat <- emmeans(anova_num, pairwise ~ treatment | age)
+print(emm_num_treat$contrasts)
+
+# Aggregate Area
+emm_area <- emmeans(anova_area, pairwise ~ age | treatment)
+print(emm_area$contrasts)
+
+emm_area_treat <- emmeans(anova_area, pairwise ~ treatment | age)
+print(emm_area_treat$contrasts)
+
+# Fluorescence Intensity
+emm_intden <- emmeans(anova_intden, pairwise ~ age | treatment)
+print(emm_intden$contrasts)
+
+emm_intden_treat <- emmeans(anova_intden, pairwise ~ treatment | age)
+print(emm_intden_treat$contrasts)
+```
+
+```{r}
+#interaction plots 
+
+plot_interaction_bar <- function(data, y, se, ylab, title) {
+  ggplot(data, aes(x = age, y = !!sym(y), fill = treatment)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8), color = "black") +
+    geom_errorbar(aes(ymin = !!sym(y) - !!sym(se), ymax = !!sym(y) + !!sym(se)),
+                  width = 0.2, position = position_dodge(width = 0.8)) +
+    labs(x = "Age", y = ylab, fill = "Treatment", title = title) +
+    theme_minimal(base_size = 14)
+}
+
+# Plot bar graphs:
+
+# Aggregate Number
+plot_interaction_bar(summary_stats, "mean_num", "se_num", "Normalized Aggregate Number", "Aggregate Number by Age and Treatment")
+
+# Aggregate Area
+plot_interaction_bar(summary_stats, "mean_area", "se_area", "Normalized Aggregate Area", "Aggregate Area by Age and Treatment")
+
+# Fluorescence Intensity
+plot_interaction_bar(summary_stats, "mean_intden", "se_intden", "Normalized Fluorescence Intensity", "Fluorescence Intensity by Age and Treatment")
+
+```
+
