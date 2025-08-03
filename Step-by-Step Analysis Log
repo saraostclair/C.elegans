@@ -40,3 +40,30 @@ CSV files and ensured folders existed before saving.
 I converted key variables such as age and treatment into factor types with specified levels. I also added new
 normalized columns (norm_aggr_num, norm_aggr_area, norm_IntDen) by dividing aggregation
 measurements by the worm area to standardize across samples.
+
+10. Calculated Group Means and Standard Errors
+I summarized the normalized data by treatment and age, calculating means and standard errors for each of
+the three measures. This summary formed the basis for my plots and statistical testing.
+
+11. Created Summary Plots
+I generated bar plots showing the mean normalized aggregate number, area, and fluorescence intensity for
+each treatment and age group, including error bars. These visualizations helped communicate differences
+and trends across conditions.
+
+12. Ran Two-Way ANOVAs
+To test for statistical effects, I conducted separate two-way ANOVAs on each dependent variable. These
+models evaluated the main effects of age and treatment, as well as their interaction.
+
+13. Displayed ANOVA Results in Tables
+I formatted the ANOVA output into clean, readable tables that showed each term, degrees of freedom, test
+statistic, and p-value. This made the results easy to interpret and present.
+
+14. Performed Post Hoc Comparisons
+For each significant effect, I ran pairwise comparisons to identify which age groups or treatment conditions
+differed significantly. I separated comparisons by treatment within each age, and by age within each
+treatment.
+
+15. Created Interaction Plots
+To visualize the interactions, I generated grouped bar plots with error bars for each variable. These plots
+allowed me to assess whether treatment effects varied by age and vice versa, providing clearer interpretation
+of the interaction terms.
