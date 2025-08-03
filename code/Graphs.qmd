@@ -31,7 +31,6 @@ summary_data <- celegans_data_final %>%
 
 ```
 
-
 ```{r}
 
 # Ensure 'age' is a factor in the desired order
@@ -57,7 +56,6 @@ ggplot(summary_data, aes(x = age, y = mean_norm_aggr_num, fill = treatment)) +
   theme_minimal()
 
 ```
-
 
 ```{r}
 # Plot 2: Normalized Aggregate Area
@@ -86,4 +84,3 @@ ggplot(summary_data, aes(x = age, y = mean_norm_IntDen, fill = treatment)) +
   theme_minimal() +
   scale_fill_manual(values = c("control" = "#619CFF", "mannitol" = "#F8766D"))
 ```
-

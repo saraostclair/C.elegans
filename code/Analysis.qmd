@@ -7,6 +7,9 @@ format: html
 #loading in data
 rm(list = ls())
 library(readr)
+library(broom)
+library(knitr)
+library(kableExtra)
 # Load necessary libraries
 library(tidyverse)  # for data handling
 library(emmeans)    # for post-hoc tests (optional)
@@ -37,30 +40,59 @@ summary(anova_area)
 anova_intden <- aov(norm_IntDen ~ age * treatment, data = celegans_data_final)
 summary(anova_intden)
 
+
+# Tidy summaries
+tidy_num <- tidy(anova_num)
+tidy_area <- tidy(anova_area)
+tidy_intden <- tidy(anova_intden)
+
+# Function to print nice table
+print_anova_table <- function(tidy_df, dv_name) {
+  tidy_df %>%
+    select(term, df = df, sumsq = statistic, meansq = statistic, statistic = statistic, p.value) %>%
+    mutate_if(is.numeric, ~round(., 5)) %>%
+    kable(caption = paste("ANOVA Table for", dv_name), col.names = c("Term", "Df", "Sum Sq", "Mean Sq", "F value", "Pr(>F)")) %>%
+    kable_styling(full_width = FALSE)
+}
+
+# Print tables
+print_anova_table(tidy_num, "Normalized Aggregate Number")
+print_anova_table(tidy_area, "Normalized Aggregate Area")
+print_anova_table(tidy_intden, "Normalized Fluorescence Intensity")
 ```
 
 ```{r}
 # post hoc comparison 
-# Aggregate Number
+# Function to format and display emmeans contrast table
+print_emm_table <- function(contrast_obj, title) {
+  contrast_df <- as.data.frame(contrast_obj)
+  contrast_df <- contrast_df %>%
+    mutate_if(is.numeric, ~round(., 4))  # Round numeric columns
+  kable(contrast_df, caption = title) %>%
+    kable_styling(full_width = FALSE)
+}
+
+# AGGREGATE NUMBER
 emm_num <- emmeans(anova_num, pairwise ~ age | treatment)
-print(emm_num$contrasts)
+print_emm_table(emm_num$contrasts, "Post Hoc: Age Comparisons within Each Treatment (Aggregate Number)")
 
 emm_num_treat <- emmeans(anova_num, pairwise ~ treatment | age)
-print(emm_num_treat$contrasts)
+print_emm_table(emm_num_treat$contrasts, "Post Hoc: Treatment Comparisons within Each Age Group (Aggregate Number)")
 
-# Aggregate Area
+# AGGREGATE AREA
 emm_area <- emmeans(anova_area, pairwise ~ age | treatment)
-print(emm_area$contrasts)
+print_emm_table(emm_area$contrasts, "Post Hoc: Age Comparisons within Each Treatment (Aggregate Area)")
 
 emm_area_treat <- emmeans(anova_area, pairwise ~ treatment | age)
-print(emm_area_treat$contrasts)
+print_emm_table(emm_area_treat$contrasts, "Post Hoc: Treatment Comparisons within Each Age Group (Aggregate Area)")
 
-# Fluorescence Intensity
+# FLUORESCENCE INTENSITY
 emm_intden <- emmeans(anova_intden, pairwise ~ age | treatment)
-print(emm_intden$contrasts)
+print_emm_table(emm_intden$contrasts, "Post Hoc: Age Comparisons within Each Treatment (Fluorescence Intensity)")
 
 emm_intden_treat <- emmeans(anova_intden, pairwise ~ treatment | age)
-print(emm_intden_treat$contrasts)
+print_emm_table(emm_intden_treat$contrasts, "Post Hoc: Treatment Comparisons within Each Age Group (Fluorescence Intensity)")
+
 ```
 
 ```{r}
