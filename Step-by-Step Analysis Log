@@ -1,33 +1,42 @@
 Step-by-Step Summary of My C. elegans Data Analysis
 
 1. Cleared the R Environment
-I started by clearing my R workspace using the command rm(list = ls()) to remove all existing objects
-and ensure a fresh environment.
+I started by clearing the R workspace using rm(list = ls()) to remove all existing objects and ensure a fresh,
+clean environment.
 
 2. Identified Issues with Column Headers
-I discovered some CSV files had misspelled column headers like "aagr_area", "X", "Area", and
-"worm_ID", which caused extra columns and misaligned data.
+While inspecting the raw data files, I discovered that some CSV files contained misspelled or inconsistent
+column headers, such as "aagr_area", "X", "Area", and "worm_ID". These inconsistencies caused extra
+columns to appear and led to misaligned data.
 
-3. Checked Which Files Had Incorrect Columns
-I wrote a script to scan all CSV files to identify those with problematic column names so I could
-locate and fix them.
+3. Checked Which Files Contained Incorrect Columns
+To locate the problematic files, I wrote a script to scan the headers of all CSV files in my raw data folder
+(data_original) and identify those containing the misspelled or unwanted column names.
 
-4. Organized Data Files into Folders
-I sorted my data into three folders:
-- data_original (raw files with errors)
-- data_fixed (corrected CSVs with proper headers)
-- dataset_final (intended folder to save the combined dataset)
+4. Organized Data Files into Separate Folders
+For clarity and reproducibility, I organized my files into three folders:
+- data_original - containing the raw CSV files with header errors
+- data_fixed - containing manually corrected CSV files with consistent column names
+- dataset_final - the output folder where the cleaned and combined dataset would be saved
 
 5. Combined Corrected CSV Files
-I combined all CSVs from the data_fixed folder into one large dataset by reading and stacking their
-rows.
+I read all the cleaned CSV files from the data_fixed folder and combined them into one large dataframe by
+stacking the rows using bind_rows().
 
 6. Saved the Combined Dataset
-I saved the combined dataset as dataset_final.csv inside the dataset_final folder.
+The combined dataset was saved as celegans_data_final.csv inside the dataset_final folder to keep the data
+organized.
 
-7. Renamed the Dataset Object
-Since the saved file name was not what I initially wanted, I manually renamed the dataset in R to
-celegan_data to keep consistent naming for analysis.
+7. Renamed the Dataset Object in R
+Step-by-Step Summary of My C. elegans Data Analysis
+After loading the combined dataset into R, I renamed the dataframe object to celegans_data_final for
+consistent reference throughout my analysis.
 
-8. Handled File Path Issues
-To avoid working directory errors, I used full folder paths in my code for reading and writing files
+8. Handled File Path Issues by Using Full Paths
+To avoid errors related to working directories, I used full absolute file paths when reading from and writing to
+CSV files and ensured folders existed before saving.
+
+9. Data Normalization and Factor Conversion
+I converted key variables such as age and treatment into factor types with specified levels. I also added new
+normalized columns (norm_aggr_num, norm_aggr_area, norm_IntDen) by dividing aggregation
+measurements by the worm area to standardize across samples.
