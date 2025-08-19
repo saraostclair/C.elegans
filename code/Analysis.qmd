@@ -13,7 +13,7 @@ library(kableExtra)
 # Load necessary libraries
 library(tidyverse)  # for data handling
 library(emmeans)    # for post-hoc tests (optional)
-celegans_data_final <- read_csv("dataset_final/celegans_data_final.csv")
+celegans_data_final <- readr::read_csv("data/dataset_final/celegans_data_final.csv")
 
 # Convert 'age' and 'treatment' to factors with correct levels
 celegans_data_final <- celegans_data_final %>%
@@ -24,6 +24,23 @@ celegans_data_final <- celegans_data_final %>%
 # Ensure 'age' is a factor in the desired order
 celegans_data_final$age <- factor(celegans_data_final$age, levels = c("L4+1", "L4+7", "L4+14"))
 ```
+
+```{r}
+# Create summary statistics table
+summary_stats <- celegans_data_final %>%
+  group_by(treatment, age) %>%
+  summarise(
+    mean_num    = mean(norm_aggr_num,  na.rm = TRUE),
+    se_num      = sd(norm_aggr_num,    na.rm = TRUE) / sqrt(n()),
+    mean_area   = mean(norm_aggr_area, na.rm = TRUE),
+    se_area     = sd(norm_aggr_area,   na.rm = TRUE) / sqrt(n()),
+    mean_intden = mean(norm_IntDen,    na.rm = TRUE),
+    se_intden   = sd(norm_IntDen,      na.rm = TRUE) / sqrt(n()),
+    .groups     = "drop"
+  )
+
+```
+
 
 ```{r}
 # Run the two-way ANOVAs

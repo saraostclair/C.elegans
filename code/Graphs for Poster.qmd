@@ -1,0 +1,243 @@
+---
+title: "Graphs for Poster"
+format: pdf
+---
+
+```{r}
+#loading in data
+rm(list = ls())
+library(ggplot2)
+library(dplyr)
+library(readr)
+getwd()
+
+
+
+celegans_data_final <- readr::read_csv("data/dataset_final/celegans_data_final.csv")
+```
+
+
+```{r fig_aggregate_number, message=FALSE, warning=FALSE}
+library(dplyr); library(ggplot2); library(emmeans); library(multcomp)
+
+# Ensure factors are ordered
+df <- celegans_data_final %>%
+  mutate(age = factor(age, levels = c("L4+1","L4+7","L4+14")),
+         treatment = factor(treatment, levels = c("control","mannitol")))
+
+# Summary (means + SE)
+sum_df <- df %>%
+  group_by(treatment, age) %>%
+  summarise(mean = mean(norm_aggr_num, na.rm=TRUE),
+            se   = sd(norm_aggr_num,   na.rm=TRUE)/sqrt(n()),
+            .groups = "drop")
+
+# Model + post hocs
+fit <- aov(norm_aggr_num ~ age * treatment, data = df)
+
+# Asterisks: control vs mannitol within each age
+bt <- as.data.frame(emmeans(fit, pairwise ~ treatment | age)$contrasts) %>%
+  transmute(age,
+            stars = case_when(
+              p.value < 0.001 ~ "***",
+              p.value < 0.01  ~ "**",
+              p.value < 0.05  ~ "*",
+              TRUE ~ ""
+            ))
+bt <- dplyr::left_join(
+  bt,
+  sum_df %>% group_by(age) %>% summarise(ypos = max(mean+se) * 1.10, .groups="drop"),
+  by = "age"
+)
+
+# Letters: within-treatment across ages (lowercase = control, UPPERCASE = mannitol)
+lets <- multcomp::cld(emmeans(fit, ~ age | treatment), Letters = letters, adjust = "tukey") %>%
+  as.data.frame() %>%
+  transmute(treatment, age,
+            letters_raw = gsub("\\s","", .group),
+            letters = if_else(treatment == "control", tolower(letters_raw), toupper(letters_raw)))
+sum_lbl <- dplyr::left_join(sum_df, lets, by = c("treatment","age")) %>%
+  mutate(label_y = mean + se * 1.06)
+
+# Plot
+pal <- c(control = "#E7C6D4", mannitol = "#A64D79")
+pos <- position_dodge(0.7)
+
+ggplot(sum_df, aes(x = age, y = mean, fill = treatment)) +
+  geom_col(width = 0.6, position = pos, color = "black", linewidth = 0.3) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
+                width = 0.2, position = pos, linewidth = 0.6) +
+  geom_text(data = sum_lbl, inherit.aes = FALSE,
+            aes(x = age, y = label_y, label = letters, group = treatment),
+            position = pos, vjust = 0, size = 4) +
+  geom_text(data = bt, inherit.aes = FALSE,
+            aes(x = age, y = ypos, label = stars),
+            vjust = 0, size = 5, fontface = "bold") +
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold", size = 16, margin = margin(b = 8)),
+        legend.position = "top",
+        legend.title = element_blank()) +
+  labs(
+    title   = "Normalized Aggregate Number",
+    x       = "Age",
+    y       = "Mean Normalized Aggregate Number")
+```
+
+```{r}
+## ---- fig_aggregate_area, message=FALSE, warning=FALSE --------------------
+library(dplyr); library(ggplot2); library(emmeans); library(multcomp)
+
+# Ensure factors are ordered
+df <- celegans_data_final %>%
+  mutate(age = factor(age, levels = c("L4+1","L4+7","L4+14")),
+         treatment = factor(treatment, levels = c("control","mannitol")))
+
+# Summary (means + SE)
+sum_df <- df %>%
+  group_by(treatment, age) %>%
+  summarise(mean = mean(norm_aggr_area, na.rm=TRUE),
+            se   = sd(norm_aggr_area,   na.rm=TRUE)/sqrt(sum(!is.na(norm_aggr_area))),
+            .groups = "drop")
+
+# Model + post hocs
+fit <- aov(norm_aggr_area ~ age * treatment, data = df)
+
+# Asterisks: control vs mannitol within each age
+bt <- as.data.frame(emmeans(fit, pairwise ~ treatment | age)$contrasts) %>%
+  transmute(age,
+            stars = case_when(
+              p.value < 0.001 ~ "***",
+              p.value < 0.01  ~ "**",
+              p.value < 0.05  ~ "*",
+              TRUE ~ ""
+            )) %>%
+  left_join(
+    sum_df %>% group_by(age) %>%
+      summarise(ypos = max(mean+se) * 1.10, .groups="drop"),
+    by = "age"
+  )
+
+# Letters: within-treatment across ages (lowercase = control, UPPERCASE = mannitol)
+emm_age_by_trt <- emmeans(fit, ~ age | treatment)
+lets <- multcomp::cld(emm_age_by_trt, Letters = letters, adjust = "tukey") %>%
+  as.data.frame() %>%
+  transmute(treatment, age,
+            letters_raw = gsub("\\s","", .group),
+            letters = if_else(treatment == "control", tolower(letters_raw), toupper(letters_raw)))
+
+sum_lbl <- sum_df %>%
+  left_join(lets, by = c("treatment","age")) %>%
+  mutate(label_y = mean + se * 1.06)
+
+# Match the same palette as Figure 1
+pal <- c(control = "#E7C6D4", mannitol = "#A64D79")
+pos <- position_dodge(0.7)
+
+ggplot(sum_df, aes(x = age, y = mean, fill = treatment)) +
+  geom_col(width = 0.6, position = pos, color = "black", linewidth = 0.3) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
+                width = 0.2, position = pos, linewidth = 0.6) +
+  geom_text(data = sum_lbl, inherit.aes = FALSE,
+            aes(x = age, y = label_y, label = letters, group = treatment),
+            position = pos, vjust = 0, size = 4) +
+  geom_text(data = bt, inherit.aes = FALSE,
+            aes(x = age, y = ypos, label = stars),
+            vjust = 0, size = 5, fontface = "bold") +
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold", size = 16, margin = margin(b = 8)),
+        legend.position = "top",
+        legend.title = element_blank()) +
+  labs(
+    title   = "Normalized Aggregate Area",
+    x       = "Age",
+    y       = "Mean Normalized Aggregate Area")
+
+```
+
+```{r}
+## ---- fig_fluorescence_intensity, message=FALSE, warning=FALSE --------------------
+library(dplyr); library(ggplot2); library(emmeans); library(multcomp)
+
+# Ensure factors are ordered
+df <- celegans_data_final %>%
+  mutate(age = factor(age, levels = c("L4+1","L4+7","L4+14")),
+         treatment = factor(treatment, levels = c("control","mannitol")))
+
+# Summary (means + SE)
+sum_df <- df %>%
+  group_by(treatment, age) %>%
+  summarise(mean = mean(norm_IntDen, na.rm=TRUE),
+            se   = sd(norm_IntDen,   na.rm=TRUE)/sqrt(sum(!is.na(norm_IntDen))),
+            .groups = "drop")
+
+# Model + post hocs
+fit <- aov(norm_IntDen ~ age * treatment, data = df)
+
+# Asterisks: control vs mannitol within each age
+bt <- as.data.frame(emmeans(fit, pairwise ~ treatment | age)$contrasts) %>%
+  transmute(age,
+            stars = case_when(
+              p.value < 0.001 ~ "***",
+              p.value < 0.01  ~ "**",
+              p.value < 0.05  ~ "*",
+              TRUE ~ ""
+            )) %>%
+  left_join(
+    sum_df %>% group_by(age) %>%
+      summarise(ypos = max(mean+se) * 1.10, .groups="drop"),
+    by = "age"
+  )
+
+# Letters: within-treatment across ages (lowercase = control, UPPERCASE = mannitol)
+emm_age_by_trt <- emmeans(fit, ~ age | treatment)
+lets <- multcomp::cld(emm_age_by_trt, Letters = letters, adjust = "tukey") %>%
+  as.data.frame() %>%
+  transmute(treatment, age,
+            letters_raw = gsub("\\s","", .group),
+            letters = if_else(treatment == "control", tolower(letters_raw), toupper(letters_raw)))
+
+sum_lbl <- sum_df %>%
+  left_join(lets, by = c("treatment","age")) %>%
+  mutate(label_y = mean + se * 1.06)
+
+# Same palette as Figures 1 and 2
+pal <- c(control = "#E7C6D4", mannitol = "#A64D79")
+pos <- position_dodge(0.7)
+
+# Plot
+ggplot(sum_df, aes(x = age, y = mean, fill = treatment)) +
+  geom_col(width = 0.6, position = pos, color = "black", linewidth = 0.3) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
+                width = 0.2, position = pos, linewidth = 0.6) +
+  geom_text(data = sum_lbl, inherit.aes = FALSE,
+            aes(x = age, y = label_y, label = letters, group = treatment),
+            position = pos, vjust = 0, size = 4) +
+  geom_text(data = bt, inherit.aes = FALSE,
+            aes(x = age, y = ypos, label = stars),
+            vjust = 0, size = 5, fontface = "bold") +
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold", size = 16, margin = margin(b = 8)),
+        legend.position = "top",
+        legend.title = element_blank()) +
+  labs(
+    title   = "Normalized Fluorescence Intensity",
+    x       = "Age",
+    y       = "Mean Normalized Fluorescence Intensity")
+
+```
+

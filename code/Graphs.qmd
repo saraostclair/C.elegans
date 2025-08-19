@@ -10,8 +10,7 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 
-celegans_data_final <- read_csv("dataset_final/celegans_data_final.csv")
- print(celegans_data_final)
+celegans_data_final <- read_csv("data/dataset_final/celegans_data_final.csv")
 ```
 
 ```{r}

@@ -1,0 +1,180 @@
+---
+title: "fixed analysis"
+format: html
+---
+
+```{r}
+#loading in data
+rm(list = ls())
+library(readr)
+library(broom)
+library(knitr)
+library(kableExtra)
+# Load necessary libraries
+library(tidyverse)  # for data handling
+library(emmeans)    # for post-hoc tests (optional)
+celegans_data_final <- readr::read_csv("data/dataset_final/celegans_data_final.csv")
+
+# Convert 'age' and 'treatment' to factors with correct levels
+celegans_data_final <- celegans_data_final %>%
+  mutate(
+    age = factor(age, levels = c("L4+1", "L4+7", "L4+14")),
+    treatment = factor(treatment, levels = c("control", "mannitol"))
+  )
+# Ensure 'age' is a factor in the desired order
+celegans_data_final$age <- factor(celegans_data_final$age, levels = c("L4+1", "L4+7", "L4+14"))
+```
+
+```{r}
+# Collapse aggregate-level data to one value per worm
+worm_summary <- celegans_data_final %>%
+  group_by(N, age, treatment, wormID) %>%
+  summarise(
+    worm_area       = mean(worm_area),
+    norm_aggr_num   = mean(norm_aggr_num),
+    norm_aggr_area  = mean(norm_aggr_area),
+    norm_IntDen     = mean(norm_IntDen),
+    .groups = "drop"
+  )
+
+```
+
+```{r}
+summary_stats <- worm_summary %>%
+  group_by(treatment, age) %>%
+  summarise(
+    mean_num    = mean(norm_aggr_num,  na.rm = TRUE),
+    se_num      = sd(norm_aggr_num,    na.rm = TRUE) / sqrt(n()),
+    mean_area   = mean(norm_aggr_area, na.rm = TRUE),
+    se_area     = sd(norm_aggr_area,   na.rm = TRUE) / sqrt(n()),
+    mean_intden = mean(norm_IntDen,    na.rm = TRUE),
+    se_intden   = sd(norm_IntDen,      na.rm = TRUE) / sqrt(n()),
+    .groups     = "drop"
+  )
+
+```
+
+```{r}
+# Aggregate number
+anova_num <- aov(norm_aggr_num ~ age * treatment, data = worm_summary)
+summary(anova_num)
+
+# Aggregate area
+anova_area <- aov(norm_aggr_area ~ age * treatment, data = worm_summary)
+summary(anova_area)
+
+# Fluorescence intensity
+anova_intden <- aov(norm_IntDen ~ age * treatment, data = worm_summary)
+summary(anova_intden)
+
+# Turn results into tidy data frames
+tidy_num    <- tidy(anova_num)
+tidy_area   <- tidy(anova_area)
+tidy_intden <- tidy(anova_intden)
+
+# Function to print a nicely formatted table
+print_anova_table <- function(tidy_df, dv_name) {
+  tidy_df %>%
+    mutate_if(is.numeric, ~round(., 5)) %>%
+    kable(caption = paste("ANOVA Table for", dv_name),
+          col.names = c("Term", "Df", "Sum Sq", "Mean Sq", "F value", "Pr(>F)")) %>%
+    kable_styling(full_width = FALSE)
+}
+
+# Print ANOVA tables
+print_anova_table(tidy_num,    "Normalized Aggregate Number")
+print_anova_table(tidy_area,   "Normalized Aggregate Area")
+print_anova_table(tidy_intden, "Normalized Fluorescence Intensity")
+
+```
+
+```{r}
+# Function to format and display emmeans contrast table
+print_emm_table <- function(contrast_obj, title) {
+  as.data.frame(contrast_obj) %>%
+    mutate_if(is.numeric, ~round(., 4)) %>%
+    kable(caption = title) %>%
+    kable_styling(full_width = FALSE)
+}
+
+# Post-hoc tests for normalized aggregate number only
+emm_num_age   <- emmeans(anova_num,   pairwise ~ age       | treatment)
+emm_num_treat <- emmeans(anova_num,   pairwise ~ treatment | age)
+
+# Age comparisons within each treatment
+print_emm_table(emm_num_age$contrasts,
+                "Post Hoc: Age Comparisons within Each Treatment (Aggregate Number)")
+
+# Treatment comparisons within each age
+print_emm_table(emm_num_treat$contrasts,
+                "Post Hoc: Treatment Comparisons within Each Age Group (Aggregate Number)")
+
+```
+
+```{r}
+#one table version
+# Function to format emmeans contrasts into a single table
+print_combined_emm_table <- function(emm_age, emm_treat, title) {
+  # Age comparisons within each treatment
+  df1 <- as.data.frame(emm_age$contrasts)  %>%
+    mutate(contrast_type = "Age within Treatment")
+  
+  # Treatment comparisons within each age
+  df2 <- as.data.frame(emm_treat$contrasts) %>%
+    mutate(contrast_type = "Treatment within Age")
+  
+  combined <- bind_rows(df1, df2) %>%
+    mutate_if(is.numeric, ~round(., 4))
+  
+  kable(combined, caption = title) %>%
+    kable_styling(full_width = FALSE)
+}
+
+# Run post-hoc tests
+emm_num_age   <- emmeans(anova_num,   pairwise ~ age       | treatment)
+emm_num_treat <- emmeans(anova_num,   pairwise ~ treatment | age)
+
+# Print a single combined table
+print_combined_emm_table(emm_num_age,
+                         emm_num_treat,
+                         "Post Hoc Comparisons for Normalized Aggregate Number")
+
+```
+
+```{r}
+# Convert age labels to numeric day values for plotting
+summary_stats_line <- summary_stats %>%
+  mutate(day = case_when(
+    age == "L4+1"  ~ 1,
+    age == "L4+7"  ~ 7,
+    age == "L4+14" ~ 14
+  ))
+
+# Function to create a line graph
+plot_interaction_line <- function(data, y, se, ylab, title) {
+  ggplot(data, aes(x = day, y = !!sym(y), group = treatment, linetype = treatment)) +
+    geom_line() +
+    geom_point() +
+    geom_errorbar(aes(ymin = !!sym(y) - !!sym(se), ymax = !!sym(y) + !!sym(se)), width = 0.4) +
+    scale_x_continuous(breaks = c(1, 7, 14)) +
+    labs(x = "Day of Adulthood", y = ylab, linetype = "Treatment", title = title) +
+    theme_minimal(base_size = 14)
+}
+
+# Line graph: Normalized Aggregate Number
+plot_interaction_line(summary_stats_line, "mean_num", "se_num",
+                      "Normalized Aggregate Number",
+                      "Aggregate Number Across Days")
+
+# Line graph: Normalized Aggregate Area
+plot_interaction_line(summary_stats_line, "mean_area", "se_area",
+                      "Normalized Aggregate Area",
+                      "Aggregate Area Across Days")
+
+# Line graph: Normalized Fluorescence Intensity
+plot_interaction_line(summary_stats_line, "mean_intden", "se_intden",
+                      "Normalized Fluorescence Intensity",
+                      "Fluorescence Intensity Across Days")
+
+```
+
