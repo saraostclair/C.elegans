@@ -1,0 +1,36 @@
+C. elegans celegans_data_final Dataset – Column Descriptions (Ordered)
+
+Aggr – Index number automatically assigned by ImageJ to each aggregate (unitless).
+
+Area – Size of the aggregate in square micrometers (µm²) if a scale was set, or in pixel² if not.
+
+Mean – Average pixel intensity (mean gray value) within the aggregate; reported in arbitrary units (a.u.) of fluorescence intensity.
+
+StdDev – Standard deviation of pixel intensity values within the aggregate (a.u.).
+
+Min – Minimum pixel intensity value detected within the aggregate (a.u.).
+
+Max – Maximum pixel intensity value detected within the aggregate (a.u.).
+
+IntDen – Integrated density of the aggregate, calculated as Area × Mean gray value; represents total fluorescence intensity (a.u. × µm², or a.u. × pixel² if unscaled).
+
+RawIntDen – Sum of all pixel intensity values within the aggregate (∑ pixel values); reported in a.u. and not scaled.
+
+N – Experiment replicate identifier (N1, N2, or N3).
+
+age – Developmental age of the worms at the time of imaging.
+Values: L4+1, L4+7, and L4+14.
+
+treatment – Indicates whether the worm received control or mannitol treatment.
+
+wormID – Unique identifier for each worm in the format
+[C/M][worm#]_N[replicate]_D[day]
+(e.g., C1_N1_D1).
+
+worm_area – Total measured area of the individual worm (µm²); used for normalization.
+
+norm_aggr_num – Number of aggregates normalized to worm size (aggregates per µm² of worm area).
+
+norm_aggr_area – Aggregate area normalized to worm size (µm² of aggregate area per µm² of worm area).
+
+norm_IntDen – Integrated aggregate fluorescence intensity normalized to worm size (IntDen per µm² of worm area).
